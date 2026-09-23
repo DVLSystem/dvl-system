@@ -1,28 +1,25 @@
-# DVL System Mobile UI v10 (Custom Icon)
+# DVL System Mobile UI v10
 
-이 패키지는 기존 v9 웹앱 파일에 새 DVL SYSTEM 아이콘을 적용한 GitHub Pages 업로드용 세트입니다.
+## DVL V10 핵심 규칙
+- 메인톤은 **전면의 가장 어두운 색(Front Shadow)** 으로 고정됩니다.
+- 전면 중간톤과 하이라이트는 명도 상승과 함께 따뜻한 방향으로 이동합니다.
+- 색온도 단계 값이 커질수록 전면의 Warm 이동과 등진면의 Cool 이동이 함께 커집니다.
+- 등진면 최암부/중간톤/하이라이트는 각각 전면의 대응 단계와 비슷한 지각 명도를 유지하면서 더 차갑게 설계됩니다.
+- 등진면 추천은 색상 거리 계산에서 명도 오차에 더 큰 패널티를 적용합니다.
 
-## 포함 파일
+## 유지된 Mobile UI v9 기능
+- 6단계 모바일 팔레트와 상세 카드
+- 기성색 추천 후보 3개 + 보유 도료 2색 조색 후보 2개
+- 후보 칩을 탭하면 팔레트와 그라데이션 즉시 변경
+- 회사별 결과 필터
+- PWA 홈 화면 설치 및 오프라인 캐시
+
+## GitHub Pages 업데이트
+저장소 루트에서 다음 파일을 모두 교체하세요.
 - index.html
 - manifest.webmanifest
 - service-worker.js
 - icon-192.png
 - icon-512.png
-- README.md
 
-## GitHub 업로드 방법
-기존 저장소에서 아래 파일들을 교체하세요.
-- index.html
-- manifest.webmanifest
-- service-worker.js
-- icon-192.png
-- icon-512.png
-
-Add file → Upload files → 파일 드래그 → Commit changes
-
-## 적용 후 아이콘이 바로 안 바뀌면
-1. Safari에서 사이트를 열고 새로고침
-2. 홈 화면 앱 완전 종료 후 재실행
-3. 그래도 이전 아이콘이면 홈 화면 아이콘 삭제 후 다시 추가
-
-이번 버전은 서비스워커 캐시 이름도 갱신했습니다.
+기존 PWA가 설치되어 있으면 서비스워커 캐시 때문에 첫 새로고침에서 이전 화면이 보일 수 있습니다. v10은 캐시 키를 변경했으므로 페이지를 다시 열거나 한 번 새로고침하면 새 파일로 전환됩니다.

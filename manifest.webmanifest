@@ -1,7 +1,7 @@
 {
-  "name": "DVL System 색상 추천기",
+  "name": "DVL System Mobile UI v10",
   "short_name": "DVL System",
-  "description": "미니어처 페인팅용 DVL 6단계 색상 추천 및 조색 도구",
+  "description": "미니어처 페인팅용 DVL V10 — 메인톤=전면 최암부, 전면 Warm / 후면 Cool 6단계 색상 추천 및 조색 도구",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
