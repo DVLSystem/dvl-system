@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="color-scheme" content="light dark">
-<title>DVL System — Mobile UI v11</title>
+<title>DVL System — Mobile UI v12</title>
 <style>
 :root{
  --bg:#f3f1eb;--panel:#fffdf8;--text:#20242a;--muted:#69717c;--line:#d9d5cb;
@@ -61,7 +61,10 @@ h2{font-size:18px;margin:0 0 12px}.three,.four{display:grid;grid-template-column
 .sphere-preview-wrap{margin-top:12px;border:1px solid var(--line);border-radius:14px;background:var(--panel);padding:12px}
 .sphere-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
 .sphere-head h3{margin:0;font-size:14px}
-.sphere-head span{font-size:11px;color:var(--muted)}
+.sphere-head span{font-size:11px;color:var(--muted);line-height:1.4}
+.sphere-control-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.sphere-control-row label{margin:0;font-size:12px}
+.sphere-control-row select,.sphere-control-row input[type="range"]{margin-top:5px}
 .sphere-layout{display:grid;grid-template-columns:minmax(0,220px) minmax(0,1fr);gap:12px;align-items:center}
 .sphere-canvas-wrap{display:grid;place-items:center}
 #spherePreview{width:min(100%,240px);aspect-ratio:1/1;border-radius:50%;background:radial-gradient(circle at 35% 28%,rgba(255,255,255,.28),rgba(255,255,255,.04) 22%,transparent 23%),linear-gradient(180deg,rgba(255,255,255,.03),rgba(0,0,0,.08));border:1px solid var(--line);box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 8px 18px rgba(0,0,0,.12)}
@@ -69,7 +72,7 @@ h2{font-size:18px;margin:0 0 12px}.three,.four{display:grid;grid-template-column
 .sphere-item{display:grid;grid-template-columns:16px minmax(0,1fr);gap:8px;align-items:center;font-size:11px;color:var(--text);padding:6px 7px;border:1px solid var(--line);border-radius:10px;background:var(--chip)}
 .sphere-dot{width:16px;height:16px;border-radius:50%;border:1px solid rgba(0,0,0,.12)}
 .sphere-note{margin-top:8px;font-size:11px;color:var(--muted);line-height:1.5}
-@media(max-width:640px){.sphere-layout{grid-template-columns:1fr}.sphere-legend{grid-template-columns:1fr 1fr}}
+@media(max-width:640px){.sphere-control-row{grid-template-columns:1fr}.sphere-layout{grid-template-columns:1fr}.sphere-legend{grid-template-columns:1fr 1fr}}
 
 @media(max-width:900px){.validation{grid-template-columns:1fr 1fr}}
 @media(max-width:560px){.gradient-labels,.gradient-values{grid-template-columns:repeat(6,minmax(0,1fr));font-size:7px;gap:2px}.gradient-values{font-size:7px}.validation{grid-template-columns:1fr}}
@@ -124,12 +127,29 @@ h2{font-size:18px;margin:0 0 12px}.three,.four{display:grid;grid-template-column
  <details class="gradient-details"><summary>그라데이션 세부 정보 보기</summary><div class="gradient-labels" id="gradientLabels"></div><div class="gradient-values" id="gradientValues"></div></details>
 </div>
 <div class="sphere-preview-wrap">
- <div class="sphere-head"><h3>DVL 입체 프리뷰</h3><span>광원 방향: 왼쪽 상단 고정</span></div>
+ <div class="sphere-head"><h3>DVL 입체 프리뷰</h3><span>구체 표면 투영 순서: 전면 하이라이트 → 전면 중간톤 → 메인톤 → 후면 암부 → 후면 중간톤 → 후면 하이라이트</span></div>
+ <div class="sphere-control-row">
+  <label>광원 방향
+   <select id="sphereLightDir">
+    <option value="tl" selected>왼쪽 상단</option>
+    <option value="t">상단</option>
+    <option value="tr">오른쪽 상단</option>
+    <option value="l">왼쪽</option>
+    <option value="r">오른쪽</option>
+    <option value="bl">왼쪽 하단</option>
+    <option value="b">하단</option>
+    <option value="br">오른쪽 하단</option>
+   </select>
+  </label>
+  <label>전/후면 경계 강도 <span id="sphereBoundaryValue">50</span>%
+   <input id="sphereBoundary" type="range" min="0" max="100" value="50">
+  </label>
+ </div>
  <div class="sphere-layout">
   <div class="sphere-canvas-wrap"><canvas id="spherePreview" width="260" height="260" aria-label="DVL sphere preview"></canvas></div>
   <div>
    <div class="sphere-legend" id="sphereLegend"></div>
-   <div class="sphere-note">구체 프리뷰는 6단계 DVL 색을 입체 표면에 자연스럽게 감아 보여주는 참고용 시각화입니다. 전면 하이라이트는 좌상단, 후면 하이라이트는 차가운 림 반사광처럼 표현됩니다.</div>
+   <div class="sphere-note">구체 프리뷰는 6단계 DVL 색을 입체 표면에 자연스럽게 감아 보여주는 참고용 시각화입니다. 광원 방향은 선택한 방향으로 바뀌며, 전/후면 경계 강도는 메인톤에서 후면 암부로 넘어가는 전이 폭을 조절합니다.</div>
   </div>
  </div>
 </div>
@@ -284,33 +304,51 @@ function rgbToHex(c){const h=v=>Math.round(clamp(v,0,255)).toString(16).padStart
 function mixHex(h1,h2,t){const a=hexToRgb(h1),b=hexToRgb(h2);return rgbToHex({r:a.r*(1-t)+b.r*t,g:a.g*(1-t)+b.g*t,b:a.b*(1-t)+b.b*t})}
 function lerpStops(stops,t){if(t<=stops[0][0])return stops[0][1];for(let i=1;i<stops.length;i++){const [p2,c2]=stops[i],[p1,c1]=stops[i-1];if(t<=p2){const u=(t-p1)/(p2-p1||1);return mixHex(c1,c2,u)}}return stops[stops.length-1][1]}
 function smoothstep(a,b,x){const t=clamp((x-a)/(b-a||1),0,1);return t*t*(3-2*t)}
+function getLightDir2D(){
+ const key=$("sphereLightDir")?.value||"tl";
+ const dirs={tl:[-0.707,-0.707],t:[0,-1],tr:[0.707,-0.707],l:[-1,0],r:[1,0],bl:[-0.707,0.707],b:[0,1],br:[0.707,0.707]};
+ return dirs[key]||dirs.tl;
+}
+function projectDVLColor(colors,t,boundaryStrength){
+ const [FH,FM,FS,RS,RM,RH]=colors;
+ const center=0.54;
+ const width=0.28-(boundaryStrength*0.22);
+ const s1=center-width/2, s2=center+width/2;
+ if(t<=0.18)return lerpStops([[0,FH],[0.18,FM]],t);
+ if(t<=0.40)return lerpStops([[0.18,FM],[0.40,FS]],t);
+ if(t<=s1)return lerpStops([[0.40,FS],[s1,FS]],t);
+ if(t<=s2)return lerpStops([[s1,FS],[s2,RS]],t);
+ if(t<=0.84)return lerpStops([[s2,RS],[0.84,RM]],t);
+ return lerpStops([[0.84,RM],[1,RH]],t);
+}
 function drawSpherePreview(colors){
  const canvas=$("spherePreview"); if(!canvas||!colors||colors.length<6)return;
  const ctx=canvas.getContext('2d'); const w=canvas.width,h=canvas.height; const img=ctx.createImageData(w,h); const data=img.data;
  const cx=w/2, cy=h/2, r=Math.min(w,h)*0.44;
- const light={x:-0.58,y:-0.58,z:0.58}; const ll=Math.hypot(light.x,light.y,light.z); light.x/=ll; light.y/=ll; light.z/=ll;
- const [FH,FM,FS,RS,RM,RH]=colors;
- const stops=[[0,RS],[0.34,RM],[0.52,FS],[0.78,FM],[1,FH]];
+ const [lx,ly]=getLightDir2D();
+ const light3={x:lx,y:ly,z:0.72}; const ll=Math.hypot(light3.x,light3.y,light3.z); light3.x/=ll; light3.y/=ll; light3.z/=ll;
+ const boundaryStrength=((+($("sphereBoundary")?.value||50))/100);
+ const boundaryValue=$("sphereBoundaryValue"); if(boundaryValue) boundaryValue.textContent=String($("sphereBoundary")?.value||50);
  for(let y=0;y<h;y++) for(let x=0;x<w;x++){
    const dx=(x+.5-cx)/r, dy=(y+.5-cy)/r, rr=dx*dx+dy*dy, idx=(y*w+x)*4;
    if(rr>1){data[idx+3]=0;continue}
-   const z=Math.sqrt(1-rr); const n={x:dx,y:dy,z};
-   const ndotl=Math.max(0,n.x*light.x+n.y*light.y+n.z*light.z);
+   const z=Math.sqrt(1-rr);
+   const proj=clamp(dx*lx+dy*ly,-1,1);
+   const t=(1-proj)/2;
+   let c=projectDVLColor(colors,t,boundaryStrength);
+   const n={x:dx,y:dy,z};
+   const ndotl=Math.max(0,n.x*light3.x+n.y*light3.y+n.z*light3.z);
    const facing=Math.max(0,n.z);
-   const rim=Math.pow(1-facing,1.65);
-   const base=lerpStops(stops,ndotl);
-   const shadowSide=smoothstep(0.0,0.34,0.34-ndotl);
-   let c=base;
-   const rhAmt=rim*shadowSide*0.95; // cool rear highlight on far rim
-   if(rhAmt>0.001)c=mixHex(c,RH,rhAmt);
-   const spec=Math.pow(Math.max(0,ndotl),28)*0.18;
+   const rim=Math.pow(1-facing,1.55);
+   const shade=0.92+0.22*ndotl-0.11*rr+0.04*z;
+   const rearRimBoost=smoothstep(0.72,1,t)*rim*0.55;
+   if(rearRimBoost>0.001)c=mixHex(c,colors[5],rearRimBoost);
+   const spec=Math.pow(ndotl,26)*0.20;
    if(spec>0.001)c=mixHex(c,'#FFFFFF',spec);
-   const shade=0.96-0.16*rr+0.08*z; // sphere volume falloff
    let rgb=hexToRgb(c); rgb={r:rgb.r*shade,g:rgb.g*shade,b:rgb.b*shade};
    data[idx]=Math.round(clamp(rgb.r,0,255)); data[idx+1]=Math.round(clamp(rgb.g,0,255)); data[idx+2]=Math.round(clamp(rgb.b,0,255)); data[idx+3]=255;
  }
  ctx.clearRect(0,0,w,h); ctx.putImageData(img,0,0);
- // soft edge and drop shadow
  ctx.save();
  ctx.globalCompositeOperation='destination-in';
  const mask=ctx.createRadialGradient(cx-r*0.28,cy-r*0.32,r*0.08,cx,cy,r*1.02);
@@ -401,6 +439,8 @@ function render(){const m=paints.find(p=>p.uid===$("base").value);if(!m){$("card
  const ideal=[m.hex,labHex(T.FM),labHex(T.FH),labHex(T.RS),labHex(T.RM),labHex(T.RH)],shown=effective.map((p,i)=>p?.hex||ideal[i]);
  // Gradient display order: Front Highlight → Front Mid → Main/Front Shadow → Rear Shadow → Rear Mid → Rear Highlight
  const gradientShown=[shown[2],shown[1],shown[0],shown[3],shown[4],shown[5]];
+ currentContext.gradientShown=gradientShown;
+ currentContext.effective=effective;
  const labels=["전면 하이라이트","전면 중간톤","메인톤 / 전면 암부","후면 암부","후면 중간톤","후면 하이라이트"];
  $("gradientBar").style.background=`linear-gradient(90deg,${gradientShown.join(",")})`;$("gradientLabels").innerHTML=labels.map(x=>`<b>${x}</b>`).join("");
  $("gradientValues").innerHTML=gradientShown.map(x=>`<span>${x}</span>`).join("");
@@ -431,6 +471,7 @@ $("resultNone").addEventListener("click",()=>{document.querySelectorAll(".result
 $("tabCommercial").addEventListener("click",()=>{candidateMode="commercial";renderCandidatePanel()});
 $("tabMix").addEventListener("click",()=>{candidateMode="mix";renderCandidatePanel()});
 $("resetChoice").addEventListener("click",()=>{delete slotOverrides[activeSlot];render();$("candidatePanel").open=true;renderCandidatePanel()});
+["sphereLightDir","sphereBoundary"].forEach(id=>$(id)?.addEventListener("input",()=>{if(currentContext?.gradientShown){drawSpherePreview(currentContext.gradientShown);renderSphereLegend(currentContext.gradientShown)}}));
 
 window.addEventListener("error",e=>{
  const el=$("validation");
